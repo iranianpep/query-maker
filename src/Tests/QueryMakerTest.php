@@ -401,6 +401,37 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expectedQuery, $query);
     }
 
+    public function testSelectQueryNestedBeforeFirst()
+    {
+        $queryMaker = new QueryMaker('testTable');
+
+        $criteria = [
+            [
+                'column'   => 'archivedAt',
+                'operator' => 'IS NULL',
+                'nested'   => [
+                    'key' => 'live',
+                    // This is added intentionally to see if QueryMaker can handle it
+                    'before' => 'OR',
+                ],
+            ],
+            [
+                'logicalOperator' => 'OR',
+                'column'          => 'live',
+                'value'           => 1,
+                'type'            => \PDO::PARAM_INT,
+                'nested'          => [
+                    'key' => 'live',
+                ],
+            ],
+        ];
+
+        $query = $queryMaker->selectQuery($criteria, [], 'name ASC', 5, 10);
+        $expectedQuery = 'SELECT * FROM `testTable` AS `testTable` WHERE (archivedAt IS NULL OR live = :live2) ORDER BY name ASC LIMIT :start, :limit;';
+
+        $this->assertEquals($expectedQuery, $query);
+    }
+
     public function testUpdateQueryWithException()
     {
         $queryMaker = new QueryMaker('testTable');

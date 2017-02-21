@@ -261,7 +261,7 @@ class QueryMaker
             foreach ($criteria as $aCriteria) {
                 if (!empty($aCriteria['nested'])) {
                     // check placeholder is not already added
-                    $before = isset($aCriteria['nested']['before']) ? "{$aCriteria['nested']['before']} " : '';
+                    $before = isset($aCriteria['nested']['before']) && $counter != 1 ? "{$aCriteria['nested']['before']} " : '';
                     $after = isset($aCriteria['nested']['after']) ? " {$aCriteria['nested']['after']}" : '';
 
                     $placeholder = $before.'({'.$aCriteria['nested']['key'].'})'.$after.' ';
