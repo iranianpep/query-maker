@@ -1,0 +1,21 @@
+{
+  "name": "query-maker/query-maker",
+  "description": "Simple class to generated PDO queries",
+  "homepage": "https://github.com/iranianpep/query-maker",
+  "license": "MIT",
+  "authors": [
+    { "name": "Ehsan Abbasi", "email": "ehsan.abb@gmail.com" }
+  ],
+  "require": {
+    "php": ">=5.4"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "4.8.*",
+    "codeclimate/php-test-reporter": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "QueryMaker\\": ["src/QueryMaker"]
+    }
+  }
+}
