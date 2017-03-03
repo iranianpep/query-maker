@@ -285,7 +285,7 @@ class QueryMaker
             
             if (empty($aCriteria['operator'])) {
                 // If operator is not specified, consider '=' as the operator
-                $aCriteria['operator'] = '=';
+                $aCriteria['operator'] = $this->getDefaultComparisonOperator();
             }
 
             if ($counter === 1 || !empty($before) || !empty($after)) {
@@ -339,18 +339,34 @@ class QueryMaker
         }
 
         if (!empty($nested)) {
-            foreach ($nested as $aNestedKey => $aNestedValue) {
-                // find and replace $aNestedKey placeholder in where clause with the nested query
-                $where = str_replace('{'.$aNestedKey.'}', rtrim($aNestedValue), $where);
-            }
+            $where = $this->populateNestedPlaceholders($nested, $where);
         }
 
         return rtrim($where);
     }
 
+    private function populateNestedPlaceholders($nested, $where)
+    {
+        if (empty($nested)) {
+            return $where;
+        }
+
+        foreach ($nested as $aNestedKey => $aNestedValue) {
+            // find and replace $aNestedKey placeholder in where clause with the nested query
+            $where = str_replace('{'.$aNestedKey.'}', rtrim($aNestedValue), $where);
+        }
+
+        return $where;
+    }
+
     private function getDefaultLogicalOperator()
     {
         return 'AND';
+    }
+    
+    private function getDefaultComparisonOperator()
+    {
+        return '=';
     }
 
     /**
