@@ -93,23 +93,19 @@ class QueryMaker
         end($fieldsValues);
 
         // fetch key of the last element of the array.
-        $LastFieldKey = key($fieldsValues);
+        $lastFieldKey = key($fieldsValues);
 
         foreach ($fieldsValues as $fieldValueKey => $fieldValue) {
             // Do not append comma if it is the last element
-            $comma = $LastFieldKey === $fieldValueKey ? '' : ', ';
-
-            // This is to avoid converting null to an empty string
-//            if ($fieldValue['value'] === null) {
-//                $fieldValue['value'] = 'null';
-//            }
+            $comma = $lastFieldKey === $fieldValueKey ? '' : ', ';
 
             if (isset($fieldValue['bind']) && $fieldValue['bind'] === false) {
                 $query .= "{$fieldValue['column']} = {$fieldValue['value']}{$comma}";
-            } else {
-                $placeholder = $this->preparePlaceholder($fieldValue['column']);
-                $query .= "{$fieldValue['column']} = :{$placeholder}{$comma}";
+                continue;
             }
+
+            $placeholder = $this->preparePlaceholder($fieldValue['column']);
+            $query .= "{$fieldValue['column']} = :{$placeholder}{$comma}";
         }
 
         $query = rtrim($query);
@@ -139,20 +135,16 @@ class QueryMaker
         $columns = [];
         $parameters = [];
 
-        foreach ($fieldsValues as $fieldValueKey => $fieldValue) {
-            // This is to avoid converting null to an empty string
-//            if ($fieldValue['value'] === null) {
-//                $fieldValue['value'] = 'null';
-//            }
-
+        foreach ($fieldsValues as $fieldValue) {
             $columns[] = "{$fieldValue['column']}";
 
             if (isset($fieldValue['bind']) && $fieldValue['bind'] === false) {
                 $parameters[] = "{$fieldValue['value']}";
-            } else {
-                $placeholder = $this->preparePlaceholder($fieldValue['column']);
-                $parameters[] = ":{$placeholder}";
+                continue;
             }
+
+            $placeholder = $this->preparePlaceholder($fieldValue['column']);
+            $parameters[] = ":{$placeholder}";
         }
 
         if (!empty($columns) && !empty($parameters)) {
@@ -163,41 +155,38 @@ class QueryMaker
     }
 
     /**
-     * @param array $fieldsValuesCollection
+     * @param array $fieldValueCollection
      *
      * @throws \Exception
      *
      * @return string
      */
-    public function batchInsertQuery(array $fieldsValuesCollection)
+    public function batchInsertQuery(array $fieldValueCollection)
     {
-        if (empty($fieldsValuesCollection)) {
+        if (empty($fieldValueCollection)) {
             throw new \Exception('fieldsValues cannot be empty in insertQuery function');
         }
 
         $query = "INSERT INTO {$this->getTable()['name']}";
 
         $parametersArray = [];
-        foreach ($fieldsValuesCollection as $key => $fieldsValues) {
+        foreach ($fieldValueCollection as $key => $fieldsValues) {
             // reset parameters
             $columns = [];
             $parameters = [];
 
-            foreach ($fieldsValues as $fieldValueKey => $fieldValue) {
-                // This is to avoid converting null to an empty string
-//                if ($fieldValue['value'] === null) {
-//                    $fieldValue['value'] = 'null';
-//                }
-
+            foreach ($fieldsValues as $fieldValue) {
                 $columns[] = "{$fieldValue['column']}";
 
                 if (isset($fieldValue['bind']) && $fieldValue['bind'] === false) {
                     $parameters[] = "{$fieldValue['value']}";
-                } else {
-                    $placeholder = $this->preparePlaceholder($fieldValue['column']);
-                    $parameters[] = ":{$placeholder}{$key}";
+                    continue;
                 }
+
+                $placeholder = $this->preparePlaceholder($fieldValue['column']);
+                $parameters[] = ":{$placeholder}{$key}";
             }
+
             $parameters = implode(',', $parameters);
             $parametersArray[] = "({$parameters})";
         }
@@ -349,9 +338,9 @@ class QueryMaker
             }
 
             return rtrim($where);
-        } else {
-            return '';
         }
+
+        return '';
     }
 
     /**
@@ -369,18 +358,6 @@ class QueryMaker
     }
 
     /**
-     * @param $field
-     *
-     * @return string
-     */
-    private function groupBy($field)
-    {
-        if (!empty($field)) {
-            return " GROUP BY {$field}";
-        }
-    }
-
-    /**
      * @param int $start
      * @param int $limit
      *
@@ -390,11 +367,13 @@ class QueryMaker
     {
         if (!empty($start) && !empty($limit)) {
             return ' LIMIT :start, :limit';
-        } elseif (!empty($limit)) {
-            return ' LIMIT :limit';
-        } else {
-            return '';
         }
+
+        if (!empty($limit)) {
+            return ' LIMIT :limit';
+        }
+
+        return '';
     }
 
     /**
@@ -417,11 +396,6 @@ class QueryMaker
                 if (isset($fieldValue['bind']) && $fieldValue['bind'] === false) {
                     continue;
                 }
-
-                // This is to avoid converting null to an empty string
-//                if ($fieldValue['value'] === null) {
-//                    $fieldValue['value'] = 'null';
-//                }
 
                 // set the type to string if it is empty
                 if (empty($fieldValue['type'])) {
@@ -476,20 +450,24 @@ class QueryMaker
                             $type = empty($aCriteria['type']) ? $this->detectParameterType($value) : $aCriteria['type'];
                             $statement->bindValue(':'.$placeholder.$counter.$key, $value, $type);
                         }
-                    } else {
-                        // value is not array
-                        // to override the automatic detection $aCriteria['type'] needs to be passed
-                        $type = empty($aCriteria['type']) ? $this->detectParameterType($aCriteria['value']) : $aCriteria['type'];
-                        $statement->bindValue(':'.$placeholder.$counter, $aCriteria['value'], $type);
-                    }
-                } else {
-                    // set the type to string if it is empty
-                    if (empty($aCriteria['type'])) {
-                        $aCriteria['type'] = \PDO::PARAM_STR;
+
+                        continue;
                     }
 
-                    $statement->bindValue(':'.$placeholder.$counter, $aCriteria['value'], $aCriteria['type']);
+                    // value is not array
+                    // to override the automatic detection $aCriteria['type'] needs to be passed
+                    $type = empty($aCriteria['type']) ? $this->detectParameterType($aCriteria['value']) : $aCriteria['type'];
+                    $statement->bindValue(':'.$placeholder.$counter, $aCriteria['value'], $type);
+
+                    continue;
                 }
+
+                // set the type to string if it is empty
+                if (empty($aCriteria['type'])) {
+                    $aCriteria['type'] = \PDO::PARAM_STR;
+                }
+
+                $statement->bindValue(':'.$placeholder.$counter, $aCriteria['value'], $aCriteria['type']);
             }
         }
 
@@ -501,7 +479,7 @@ class QueryMaker
      * @param array         $criteria
      * @param int           $start
      * @param int           $limit
-     * @param array         $fieldsValuesCollection
+     * @param array         $fieldValueCollection
      *
      * @return \PDOStatement
      */
@@ -510,24 +488,19 @@ class QueryMaker
         array $criteria,
         $start = 0,
         $limit = 0,
-        array $fieldsValuesCollection = []
+        array $fieldValueCollection = []
     ) {
-        if (!empty($fieldsValuesCollection)) {
+        if (!empty($fieldValueCollection)) {
             // bind criteria values
             $this->bindCriteria($statement, $criteria);
 
-            foreach ($fieldsValuesCollection as $key => $fieldsValues) {
+            foreach ($fieldValueCollection as $key => $fieldsValues) {
                 // bind field values
                 if (!empty($fieldsValues)) {
                     foreach ($fieldsValues as $fieldValue) {
                         if (isset($fieldValue['bind']) && $fieldValue['bind'] === false) {
                             continue;
                         }
-
-                        // This is to avoid converting null to an empty string
-//                        if ($fieldValue['value'] === null) {
-//                            $fieldValue['value'] = 'null';
-//                        }
 
                         // set the type to string if it is empty
                         if (empty($fieldValue['type'])) {
@@ -564,13 +537,13 @@ class QueryMaker
         $tables = $this->getTables();
         if ($tableAlias === null) {
             return array_shift($tables);
-        } else {
-            if (array_key_exists($tableAlias, $tables)) {
-                return $tables[$tableAlias];
-            } else {
-                throw new \Exception("Requested table does not exist for the alias: {$tableAlias}");
-            }
         }
+
+        if (!array_key_exists($tableAlias, $tables)) {
+            throw new \Exception("Requested table does not exist for the alias: {$tableAlias}");
+        }
+
+        return $tables[$tableAlias];
     }
 
     /**
@@ -618,16 +591,6 @@ class QueryMaker
 
                 $from .= ' ON '.implode(' = ', $table['on']);
             }
-
-//            if ($fromColumns === null) {
-//                $columns = (new MysqlUtility())->getTableColumns($table['name']);
-//
-//                if (!empty($columns)) {
-//                    foreach ($columns as $column) {
-//                        $joinedSelect[] = "`{$tableAlias}`.`{$column}` AS `{$tableAlias}.{$column}`";
-//                    }
-//                }
-//            }
 
             $counter++;
         }
