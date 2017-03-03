@@ -4,26 +4,11 @@ use QueryMaker\QueryMaker;
 
 class QueryMakerTest extends \PHPUnit_Framework_TestCase
 {
-    public function testSelectQuery()
+    public function testSelectOrderQuery()
     {
         $queryMaker = $this->getQueryMaker();
 
-        $criteria = [
-            [
-                'logicalOperator' => '',
-                'column'          => 'parentId',
-                'value'           => 456,
-                'type'            => \PDO::PARAM_INT,
-            ],
-            [
-                'column' => 'status',
-                'value'  => 'active',
-            ],
-            [
-                'column'   => 'archivedAt',
-                'operator' => 'IS NULL',
-            ],
-        ];
+        $criteria = $this->getDummyCriteria();
 
         $query = $queryMaker->selectQuery($criteria, [], 'name ASC', 5, 10);
         $expectedQuery = 'SELECT * FROM `testTable` AS `testTable` WHERE parentId = :parentId1 AND status = :status2 AND archivedAt IS NULL ORDER BY name ASC LIMIT :start, :limit;';
@@ -56,6 +41,11 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
         $expectedQuery = 'SELECT * FROM `testTable` AS `testTable` WHERE testColumn1 NOT LIKE :testColumn11 ORDER BY name ASC LIMIT :limit;';
 
         $this->assertEquals($expectedQuery, $query);
+    }
+
+    public function testSelectQuery()
+    {
+        $queryMaker = $this->getQueryMaker();
 
         $criteria = [
             [
@@ -385,22 +375,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
     {
         $queryMaker = $this->getQueryMaker();
 
-        $criteria = [
-            [
-                'logicalOperator' => '',
-                'column'          => 'parentId',
-                'value'           => 456,
-                'type'            => \PDO::PARAM_INT,
-            ],
-            [
-                'column' => 'status',
-                'value'  => 'active',
-            ],
-            [
-                'column'   => 'archivedAt',
-                'operator' => 'IS NULL',
-            ],
-        ];
+        $criteria = $this->getDummyCriteria();
 
         $fieldsValues = [
 
@@ -415,22 +390,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
     {
         $queryMaker = $this->getQueryMaker();
 
-        $criteria = [
-            [
-                'logicalOperator' => '',
-                'column'          => 'parentId',
-                'value'           => 456,
-                'type'            => \PDO::PARAM_INT,
-            ],
-            [
-                'column' => 'status',
-                'value'  => 'active',
-            ],
-            [
-                'column'   => 'archivedAt',
-                'operator' => 'IS NULL',
-            ],
-        ];
+        $criteria = $this->getDummyCriteria();
 
         $fieldsValues = [
             [
@@ -482,22 +442,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
     {
         $queryMaker = $this->getQueryMaker();
 
-        $criteria = [
-            [
-                'logicalOperator' => '',
-                'column'          => 'parentId',
-                'value'           => 456,
-                'type'            => \PDO::PARAM_INT,
-            ],
-            [
-                'column' => 'status',
-                'value'  => 'active',
-            ],
-            [
-                'column'   => 'archivedAt',
-                'operator' => 'IS NULL',
-            ],
-        ];
+        $criteria = $this->getDummyCriteria();
 
         $query = $queryMaker->deleteQuery($criteria, 0, 0);
         $expectedQuery = 'DELETE FROM testTable WHERE parentId = :parentId1 AND status = :status2 AND archivedAt IS NULL;';
@@ -509,22 +454,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
     {
         $queryMaker = $this->getQueryMaker();
 
-        $criteria = [
-            [
-                'logicalOperator' => '',
-                'column'          => 'parentId',
-                'value'           => 456,
-                'type'            => \PDO::PARAM_INT,
-            ],
-            [
-                'column' => 'status',
-                'value'  => 'active',
-            ],
-            [
-                'column'   => 'archivedAt',
-                'operator' => 'IS NULL',
-            ],
-        ];
+        $criteria = $this->getDummyCriteria();
 
         $query = $queryMaker->countQuery($criteria);
         $expectedQuery = 'SELECT COUNT(*) FROM `testTable` AS `testTable` WHERE parentId = :parentId1 AND status = :status2 AND archivedAt IS NULL;';
@@ -601,6 +531,26 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
                     '`cj_countries`.`code`',
                     '`cj_states`.`countryCode`',
                 ],
+            ],
+        ];
+    }
+
+    private function getDummyCriteria()
+    {
+        return [
+            [
+                'logicalOperator' => '',
+                'column'          => 'parentId',
+                'value'           => 456,
+                'type'            => \PDO::PARAM_INT,
+            ],
+            [
+                'column' => 'status',
+                'value'  => 'active',
+            ],
+            [
+                'column'   => 'archivedAt',
+                'operator' => 'IS NULL',
             ],
         ];
     }
