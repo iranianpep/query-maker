@@ -6,7 +6,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 {
     public function testSelectQuery()
     {
-        $queryMaker = new QueryMaker('testTable');
+        $queryMaker = $this->getQueryMaker();
 
         $criteria = [
             [
@@ -403,7 +403,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
     public function testSelectQueryNestedBeforeFirst()
     {
-        $queryMaker = new QueryMaker('testTable');
+        $queryMaker = $this->getQueryMaker();
 
         $criteria = [
             [
@@ -434,7 +434,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
     public function testUpdateQueryWithException()
     {
-        $queryMaker = new QueryMaker('testTable');
+        $queryMaker = $this->getQueryMaker();
 
         $criteria = [
             [
@@ -464,7 +464,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
     public function testUpdateQuery()
     {
-        $queryMaker = new QueryMaker('testTable');
+        $queryMaker = $this->getQueryMaker();
 
         $criteria = [
             [
@@ -506,7 +506,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
     public function testInsertQuery()
     {
-        $queryMaker = new QueryMaker('testTable');
+        $queryMaker = $this->getQueryMaker();
 
         $fieldsValues = [
             [
@@ -531,7 +531,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
     public function testDeleteQuery()
     {
-        $queryMaker = new QueryMaker('testTable');
+        $queryMaker = $this->getQueryMaker();
 
         $criteria = [
             [
@@ -558,7 +558,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
     public function testCountQuery()
     {
-        $queryMaker = new QueryMaker('testTable');
+        $queryMaker = $this->getQueryMaker();
 
         $criteria = [
             [
@@ -585,10 +585,10 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
     public function testGetTable()
     {
-        $queryMaker = new QueryMaker('testTable');
+        $queryMaker = $this->getQueryMaker();
         $this->assertEquals(['name' => 'testTable'], $queryMaker->getTable());
 
-        $queryMaker = new QueryMaker('testTable');
+        $queryMaker = $this->getQueryMaker();
         $this->assertEquals(['name' => 'testTable'], $queryMaker->getTable('testTable'));
 
         $queryMaker = new QueryMaker([
@@ -616,7 +616,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
     public function testGetTables()
     {
-        $queryMaker = new QueryMaker('testTable');
+        $queryMaker = $this->getQueryMaker();
         $this->assertEquals(['testTable' => ['name' => 'testTable']], $queryMaker->getTables());
 
         $queryMaker = new QueryMaker([
@@ -626,5 +626,10 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $this->assertEquals(['testTable' => ['name' => 'testTableName']], $queryMaker->getTables());
+    }
+
+    private function getQueryMaker($table = 'testTable')
+    {
+        return new QueryMaker($table);
     }
 }

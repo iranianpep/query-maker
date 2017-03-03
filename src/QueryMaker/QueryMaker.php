@@ -388,24 +388,10 @@ class QueryMaker
     public function bindValues(\PDOStatement $statement, array $criteria, $start = 0, $limit = 0, array $fieldsValues = [])
     {
         // bind criteria values
-        $this->bindCriteria($statement, $criteria);
+        $statement = $this->bindCriteria($statement, $criteria);
 
         // bind field values
-        if (!empty($fieldsValues)) {
-            foreach ($fieldsValues as $fieldValue) {
-                if (isset($fieldValue['bind']) && $fieldValue['bind'] === false) {
-                    continue;
-                }
-
-                // set the type to string if it is empty
-                if (empty($fieldValue['type'])) {
-                    $fieldValue['type'] = \PDO::PARAM_STR;
-                }
-
-                $placeholder = $this->preparePlaceholder($fieldValue['column']);
-                $statement->bindValue(':'.$placeholder, $fieldValue['value'], $fieldValue['type']);
-            }
-        }
+        $statement = $this->bindFieldsValues($statement, $fieldsValues);
 
         // bind start and limit if they are specified
         if (!empty($start) && !empty($limit)) {
@@ -418,6 +404,29 @@ class QueryMaker
         return $statement;
     }
 
+    private function bindFieldsValues(\PDOStatement $statement, $fieldsValues)
+    {
+        if (empty($fieldsValues)) {
+            return $statement;
+        }
+
+        foreach ($fieldsValues as $fieldValue) {
+            if (isset($fieldValue['bind']) && $fieldValue['bind'] === false) {
+                continue;
+            }
+
+            // set the type to string if it is empty
+            if (empty($fieldValue['type'])) {
+                $fieldValue['type'] = \PDO::PARAM_STR;
+            }
+
+            $placeholder = $this->preparePlaceholder($fieldValue['column']);
+            $statement->bindValue(':'.$placeholder, $fieldValue['value'], $fieldValue['type']);
+        }
+        
+        return $statement;
+    }
+    
     /**
      * @param \PDOStatement $statement
      * @param array         $criteria
@@ -492,25 +501,11 @@ class QueryMaker
     ) {
         if (!empty($fieldValueCollection)) {
             // bind criteria values
-            $this->bindCriteria($statement, $criteria);
+            $statement = $this->bindCriteria($statement, $criteria);
 
             foreach ($fieldValueCollection as $key => $fieldsValues) {
                 // bind field values
-                if (!empty($fieldsValues)) {
-                    foreach ($fieldsValues as $fieldValue) {
-                        if (isset($fieldValue['bind']) && $fieldValue['bind'] === false) {
-                            continue;
-                        }
-
-                        // set the type to string if it is empty
-                        if (empty($fieldValue['type'])) {
-                            $fieldValue['type'] = \PDO::PARAM_STR;
-                        }
-
-                        $placeholder = $this->preparePlaceholder($fieldValue['column']);
-                        $statement->bindValue(':'.$placeholder.$key, $fieldValue['value'], $fieldValue['type']);
-                    }
-                }
+                $statement = $this->bindFieldsValues($statement, $fieldsValues);
             }
 
             // bind start and limit if they are specified
