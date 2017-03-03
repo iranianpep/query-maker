@@ -461,49 +461,51 @@ class QueryMaker
      */
     private function bindCriteria(\PDOStatement $statement, array $criteria)
     {
+        if (empty($criteria)) {
+            return $statement;
+        }
+
         // bind criteria values
-        if (!empty($criteria)) {
-            $counter = 0;
-            foreach ($criteria as $aCriteria) {
-                $counter++;
+        $counter = 0;
+        foreach ($criteria as $aCriteria) {
+            $counter++;
 
-                if (empty($aCriteria['operator'])) {
-                    // If operator is not specified, consider = as the operator
-                    $aCriteria['operator'] = '=';
-                }
+            if (empty($aCriteria['operator'])) {
+                // If operator is not specified, consider = as the operator
+                $aCriteria['operator'] = $this->getDefaultComparisonOperator();
+            }
 
-                if ($aCriteria['operator'] === 'IS NULL' || $aCriteria['operator'] === 'IS NOT NULL') {
-                    continue;
-                }
+            if ($aCriteria['operator'] === 'IS NULL' || $aCriteria['operator'] === 'IS NOT NULL') {
+                continue;
+            }
 
-                $placeholder = $this->preparePlaceholder($aCriteria['column']);
-                if ($aCriteria['operator'] === 'IN' || $aCriteria['operator'] === 'NOT IN') {
-                    if (is_array($aCriteria['value'])) {
-                        // value is array
-                        foreach ($aCriteria['value'] as $key => $value) {
-                            // to override the automatic detection $aCriteria['type'] needs to be passed
-                            $type = empty($aCriteria['type']) ? $this->detectParameterType($value) : $aCriteria['type'];
-                            $statement->bindValue(':'.$placeholder.$counter.$key, $value, $type);
-                        }
-
-                        continue;
+            $placeholder = $this->preparePlaceholder($aCriteria['column']);
+            if ($aCriteria['operator'] === 'IN' || $aCriteria['operator'] === 'NOT IN') {
+                if (is_array($aCriteria['value'])) {
+                    // value is array
+                    foreach ($aCriteria['value'] as $key => $value) {
+                        // to override the automatic detection $aCriteria['type'] needs to be passed
+                        $type = empty($aCriteria['type']) ? $this->detectParameterType($value) : $aCriteria['type'];
+                        $statement->bindValue(':'.$placeholder.$counter.$key, $value, $type);
                     }
 
-                    // value is not array
-                    // to override the automatic detection $aCriteria['type'] needs to be passed
-                    $type = empty($aCriteria['type']) ? $this->detectParameterType($aCriteria['value']) : $aCriteria['type'];
-                    $statement->bindValue(':'.$placeholder.$counter, $aCriteria['value'], $type);
-
                     continue;
                 }
 
-                // set the type to string if it is empty
-                if (empty($aCriteria['type'])) {
-                    $aCriteria['type'] = \PDO::PARAM_STR;
-                }
+                // value is not array
+                // to override the automatic detection $aCriteria['type'] needs to be passed
+                $type = empty($aCriteria['type']) ? $this->detectParameterType($aCriteria['value']) : $aCriteria['type'];
+                $statement->bindValue(':'.$placeholder.$counter, $aCriteria['value'], $type);
 
-                $statement->bindValue(':'.$placeholder.$counter, $aCriteria['value'], $aCriteria['type']);
+                continue;
             }
+
+            // set the type to string if it is empty
+            if (empty($aCriteria['type'])) {
+                $aCriteria['type'] = \PDO::PARAM_STR;
+            }
+
+            $statement->bindValue(':'.$placeholder.$counter, $aCriteria['value'], $aCriteria['type']);
         }
 
         return $statement;
