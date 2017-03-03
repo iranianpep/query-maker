@@ -505,7 +505,7 @@ class QueryMaker
             // bind criteria values
             $statement = $this->bindCriteria($statement, $criteria);
 
-            foreach ($fieldValueCollection as $key => $fieldsValues) {
+            foreach ($fieldValueCollection as $fieldsValues) {
                 // bind field values
                 $statement = $this->bindFieldsValues($statement, $fieldsValues);
             }

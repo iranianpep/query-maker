@@ -300,7 +300,10 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
         $expectedQuery = 'SELECT * FROM `testTable` AS `testTable` WHERE id IN (:id1) AND id IN (:id20,:id21,:id22);';
 
         $this->assertEquals($expectedQuery, $query);
+    }
 
+    public function testSelectJoinQuery()
+    {
         $tables = [
             'cj_states' => [
                 'name' => 'cj_states',
