@@ -248,17 +248,14 @@ class QueryMaker
         }
 
         $where = ' WHERE ';
-
         $counter = 0;
         $nested = [];
         foreach ($criteria as $aCriteria) {
             $counter++;
-            
             if (!empty($aCriteria['nested'])) {
                 // check placeholder is not already added
                 $before = isset($aCriteria['nested']['before']) && $counter != 1 ? "{$aCriteria['nested']['before']} " : '';
                 $after = isset($aCriteria['nested']['after']) ? " {$aCriteria['nested']['after']}" : '';
-
                 $placeholder = $before.'({'.$aCriteria['nested']['key'].'})'.$after.' ';
                 $placeholderExists = strpos($where, $placeholder);
 
@@ -286,7 +283,7 @@ class QueryMaker
                 $logicalOperator = '';
             } elseif (empty($aCriteria['logicalOperator'])) {
                 // counter is greater than 1 and $aCriteria['logicalOperator'] is empty, consider 'AND' as default
-                $logicalOperator = 'AND ';
+                $logicalOperator = $this->getDefaultLogicalOperator().' ';
             } else {
                 // counter is greater than 1 and $aCriteria['logicalOperator'] is NOT empty, validate it first
                 if (!in_array($aCriteria['logicalOperator'], $this->validLogicalOperators)) {
@@ -297,13 +294,11 @@ class QueryMaker
             }
 
             $toBeAppended = "{$logicalOperator}{$aCriteria['column']} {$aCriteria['operator']} ";
-
             // Form the query for IN or NOT IN
             if ($aCriteria['operator'] === 'IN' || $aCriteria['operator'] === 'NOT IN') {
                 if (is_array($aCriteria['value'])) {
                     // value is array
                     $newParameters = [];
-
                     $aCriteriaKeys = array_keys($aCriteria['value']);
                     foreach ($aCriteriaKeys as $key) {
                         $placeholder = $this->preparePlaceholder($aCriteria['column']);
@@ -346,6 +341,11 @@ class QueryMaker
         }
 
         return rtrim($where);
+    }
+
+    private function getDefaultLogicalOperator()
+    {
+        return 'AND';
     }
 
     /**
