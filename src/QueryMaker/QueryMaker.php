@@ -234,6 +234,21 @@ class QueryMaker
         return $query;
     }
 
+    private function validateCriteria(array $criteria)
+    {
+        if (empty($criteria['column'])) {
+            throw new \Exception('Column name cannot be empty');
+        }
+
+        if (!empty($criteria['operator']) && !in_array($criteria['operator'], $this->validComparisonOperators)) {
+            throw new \Exception("'{$criteria['operator']}' is not a valid comparison operator");
+        }
+
+        if (!empty($criteria['logicalOperator']) && !in_array($criteria['logicalOperator'], $this->validLogicalOperators)) {
+            throw new \Exception("'{$criteria['logicalOperator']}' is not a valid logical operator");
+        }
+    }
+    
     /**
      * @param array $criteria
      *
@@ -266,17 +281,11 @@ class QueryMaker
                 }
             }
 
-            if (empty($aCriteria['column'])) {
-                throw new \Exception('Column name cannot be empty');
-            }
-
+            $this->validateCriteria($aCriteria);
+            
             if (empty($aCriteria['operator'])) {
                 // If operator is not specified, consider '=' as the operator
                 $aCriteria['operator'] = '=';
-            }
-
-            if (!in_array($aCriteria['operator'], $this->validComparisonOperators)) {
-                throw new \Exception("'{$aCriteria['operator']}' is not a valid comparison operator");
             }
 
             if ($counter === 1 || !empty($before) || !empty($after)) {
@@ -285,11 +294,7 @@ class QueryMaker
                 // counter is greater than 1 and $aCriteria['logicalOperator'] is empty, consider 'AND' as default
                 $logicalOperator = $this->getDefaultLogicalOperator().' ';
             } else {
-                // counter is greater than 1 and $aCriteria['logicalOperator'] is NOT empty, validate it first
-                if (!in_array($aCriteria['logicalOperator'], $this->validLogicalOperators)) {
-                    throw new \Exception("'{$aCriteria['logicalOperator']}' is not a valid logical operator");
-                }
-
+                // counter is greater than 1 and $aCriteria['logicalOperator'] is NOT empty
                 $logicalOperator = "{$aCriteria['logicalOperator']} ";
             }
 
