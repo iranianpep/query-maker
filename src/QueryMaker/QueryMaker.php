@@ -22,15 +22,16 @@ class QueryMaker
         if ($tables !== null) {
             if (is_array($tables)) {
                 $this->setTables($tables);
-            } else {
-                // $tables is string, treat it as a table
-                $this->addTable(
-                    $tables,
-                    [
-                        'name' => $tables,
-                    ]
-                );
+                return;
             }
+
+            // $tables is string, treat it as a table
+            $this->addTable(
+                $tables,
+                [
+                    'name' => $tables,
+                ]
+            );
         }
     }
 
@@ -248,9 +249,11 @@ class QueryMaker
 
         $where = ' WHERE ';
 
-        $counter = 1;
+        $counter = 0;
         $nested = [];
         foreach ($criteria as $aCriteria) {
+            $counter++;
+            
             if (!empty($aCriteria['nested'])) {
                 // check placeholder is not already added
                 $before = isset($aCriteria['nested']['before']) && $counter != 1 ? "{$aCriteria['nested']['before']} " : '';
@@ -323,16 +326,16 @@ class QueryMaker
 
             if (empty($aCriteria['nested'])) {
                 $where .= $toBeAppended;
-            } else {
-                // append it to the key in $nested
-                if (!isset($nested[$aCriteria['nested']['key']])) {
-                    $nested[$aCriteria['nested']['key']] = $toBeAppended;
-                } else {
-                    $nested[$aCriteria['nested']['key']] .= $toBeAppended;
-                }
+                continue;
             }
 
-            $counter++;
+            // append it to the key in $nested
+            if (!isset($nested[$aCriteria['nested']['key']])) {
+                $nested[$aCriteria['nested']['key']] = $toBeAppended;
+                continue;
+            }
+            
+            $nested[$aCriteria['nested']['key']] .= $toBeAppended;
         }
 
         if (!empty($nested)) {

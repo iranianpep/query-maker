@@ -304,25 +304,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
     public function testSelectJoinQuery()
     {
-        $tables = [
-            'cj_states' => [
-                'name' => 'cj_states',
-            ],
-            'cj_cities' => [
-                'name' => 'cj_cities',
-                'on'   => [
-                    '`cj_states`.`id`',
-                    '`cj_cities`.`stateId`',
-                ],
-            ],
-            'cj_countries' => [
-                'name' => 'cj_countries',
-                'on'   => [
-                    '`cj_countries`.`code`',
-                    '`cj_states`.`countryCode`',
-                ],
-            ],
-        ];
+        $tables = $this->getDummyTable();
 
         $queryMaker = new QueryMaker($tables);
         $query = $queryMaker->selectQuery([], '*');
@@ -330,25 +312,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($expectedQuery, $query);
 
-        $tables = [
-            'cj_states' => [
-                'name' => 'cj_states',
-            ],
-            'cj_cities' => [
-                'name' => 'cj_cities',
-                'on'   => [
-                    '`cj_states`.`id`',
-                    '`cj_cities`.`stateId`',
-                ],
-            ],
-            'cj_countries' => [
-                'name' => 'cj_countries',
-                'on'   => [
-                    '`cj_countries`.`code`',
-                    '`cj_states`.`countryCode`',
-                ],
-            ],
-        ];
+        $tables = $this->getDummyTable();
 
         $fromColumns = [
             'cj_states.name',
@@ -361,25 +325,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals($expectedQuery, $query);
 
-        $tables = [
-            'cj_states' => [
-                'name' => 'cj_states',
-            ],
-            'cj_cities' => [
-                'name' => 'cj_cities',
-                'on'   => [
-                    'cj_states.id',
-                    'cj_cities.stateId',
-                ],
-            ],
-            'cj_countries' => [
-                'name' => 'cj_countries',
-                'on'   => [
-                    'cj_countries.code',
-                    'cj_states.countryCode',
-                ],
-            ],
-        ];
+        $tables = $this->getDummyTable();
 
         $fromColumns = [
             'cj_states.name',
@@ -399,7 +345,7 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
 
         $queryMaker = new QueryMaker($tables);
         $query = $queryMaker->selectQuery($criteria, $fromColumns, 'cj_states.status ASC', 0, 10);
-        $expectedQuery = 'SELECT cj_states.name, cj_countries.name FROM `cj_states` AS `cj_states` JOIN `cj_cities` AS `cj_cities` ON cj_states.id = cj_cities.stateId JOIN `cj_countries` AS `cj_countries` ON cj_countries.code = cj_states.countryCode WHERE cj_states.status = :cj_states_status1 AND cj_states.archivedAt IS NULL ORDER BY cj_states.status ASC LIMIT :limit;';
+        $expectedQuery = 'SELECT cj_states.name, cj_countries.name FROM `cj_states` AS `cj_states` JOIN `cj_cities` AS `cj_cities` ON `cj_states`.`id` = `cj_cities`.`stateId` JOIN `cj_countries` AS `cj_countries` ON `cj_countries`.`code` = `cj_states`.`countryCode` WHERE cj_states.status = :cj_states_status1 AND cj_states.archivedAt IS NULL ORDER BY cj_states.status ASC LIMIT :limit;';
 
         $this->assertEquals($expectedQuery, $query);
     }
@@ -634,5 +580,28 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
     private function getQueryMaker($table = 'testTable')
     {
         return new QueryMaker($table);
+    }
+
+    private function getDummyTable()
+    {
+        return [
+            'cj_states' => [
+                'name' => 'cj_states',
+            ],
+            'cj_cities' => [
+                'name' => 'cj_cities',
+                'on'   => [
+                    '`cj_states`.`id`',
+                    '`cj_cities`.`stateId`',
+                ],
+            ],
+            'cj_countries' => [
+                'name' => 'cj_countries',
+                'on'   => [
+                    '`cj_countries`.`code`',
+                    '`cj_states`.`countryCode`',
+                ],
+            ],
+        ];
     }
 }
