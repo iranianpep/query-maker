@@ -376,11 +376,11 @@ class QueryMaker
      */
     private function orderBy($field)
     {
-        if (!empty($field)) {
-            return " ORDER BY {$field}";
+        if (empty($field)) {
+            return '';
         }
-
-        return '';
+        
+        return " ORDER BY {$field}";
     }
 
     /**
