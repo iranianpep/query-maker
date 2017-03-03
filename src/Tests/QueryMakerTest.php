@@ -371,21 +371,6 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expectedQuery, $query);
     }
 
-    public function testUpdateQueryWithException()
-    {
-        $queryMaker = $this->getQueryMaker();
-
-        $criteria = $this->getDummyCriteria();
-
-        $fieldsValues = [
-
-        ];
-
-        $this->setExpectedException('Exception', 'fieldsValues cannot be empty in updateQuery function');
-
-        $queryMaker->updateQuery($criteria, $fieldsValues, 0, 0);
-    }
-
     public function testUpdateQuery()
     {
         $queryMaker = $this->getQueryMaker();
@@ -411,6 +396,18 @@ class QueryMakerTest extends \PHPUnit_Framework_TestCase
         $expectedQuery = 'UPDATE testTable SET name = :name, email = :email, phone = :phone WHERE parentId = :parentId1 AND status = :status2 AND archivedAt IS NULL;';
 
         $this->assertEquals($expectedQuery, $query);
+
+        $queryMaker = $this->getQueryMaker();
+
+        $criteria = $this->getDummyCriteria();
+
+        $fieldsValues = [
+
+        ];
+
+        $this->setExpectedException('Exception', 'fieldsValues cannot be empty in updateQuery function');
+
+        $queryMaker->updateQuery($criteria, $fieldsValues, 0, 0);
     }
 
     public function testInsertQuery()
