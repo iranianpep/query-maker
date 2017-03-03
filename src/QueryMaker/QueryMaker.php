@@ -242,105 +242,107 @@ class QueryMaker
      */
     private function where(array $criteria)
     {
-        if (!empty($criteria)) {
-            $where = ' WHERE ';
-
-            $counter = 1;
-            $nested = [];
-            foreach ($criteria as $aCriteria) {
-                if (!empty($aCriteria['nested'])) {
-                    // check placeholder is not already added
-                    $before = isset($aCriteria['nested']['before']) && $counter != 1 ? "{$aCriteria['nested']['before']} " : '';
-                    $after = isset($aCriteria['nested']['after']) ? " {$aCriteria['nested']['after']}" : '';
-
-                    $placeholder = $before.'({'.$aCriteria['nested']['key'].'})'.$after.' ';
-                    $placeholderExists = strpos($where, $placeholder);
-
-                    // if placeholder does not exist append it to where clause
-                    if ($placeholderExists === false) {
-                        // add placeholder
-                        $where .= $placeholder;
-                    }
-                }
-
-                if (empty($aCriteria['column'])) {
-                    throw new \Exception('Column name cannot be empty');
-                }
-
-                if (empty($aCriteria['operator'])) {
-                    // If operator is not specified, consider '=' as the operator
-                    $aCriteria['operator'] = '=';
-                }
-
-                if (!in_array($aCriteria['operator'], $this->validComparisonOperators)) {
-                    throw new \Exception("'{$aCriteria['operator']}' is not a valid comparison operator");
-                }
-
-                if ($counter === 1 || !empty($before) || !empty($after)) {
-                    $logicalOperator = '';
-                } elseif (empty($aCriteria['logicalOperator'])) {
-                    // counter is greater than 1 and $aCriteria['logicalOperator'] is empty, consider 'AND' as default
-                    $logicalOperator = 'AND ';
-                } else {
-                    // counter is greater than 1 and $aCriteria['logicalOperator'] is NOT empty, validate it first
-                    if (!in_array($aCriteria['logicalOperator'], $this->validLogicalOperators)) {
-                        throw new \Exception("'{$aCriteria['logicalOperator']}' is not a valid logical operator");
-                    }
-
-                    $logicalOperator = "{$aCriteria['logicalOperator']} ";
-                }
-
-                $toBeAppended = "{$logicalOperator}{$aCriteria['column']} {$aCriteria['operator']} ";
-
-                // Form the query for IN or NOT IN
-                if ($aCriteria['operator'] === 'IN' || $aCriteria['operator'] === 'NOT IN') {
-                    if (is_array($aCriteria['value'])) {
-                        // value is array
-                        $newParameters = [];
-                        foreach ($aCriteria['value'] as $key => $value) {
-                            $placeholder = $this->preparePlaceholder($aCriteria['column']);
-                            $newParameters[] = ":{$placeholder}{$counter}{$key}";
-                        }
-
-                        $toBeAppended .= '('.implode(',', $newParameters).') ';
-                    } else {
-                        // value is not array
-                        $placeholder = $this->preparePlaceholder($aCriteria['column']);
-                        $toBeAppended .= "(:{$placeholder}{$counter}) ";
-                    }
-                } else {
-                    // IS NULL and IS NOT NULL do NOT need a parameter
-                    if ($aCriteria['operator'] !== 'IS NULL' && $aCriteria['operator'] !== 'IS NOT NULL') {
-                        $placeholder = $this->preparePlaceholder($aCriteria['column']);
-                        $toBeAppended .= ":{$placeholder}{$counter} ";
-                    }
-                }
-
-                if (empty($aCriteria['nested'])) {
-                    $where .= $toBeAppended;
-                } else {
-                    // append it to the key in $nested
-                    if (!isset($nested[$aCriteria['nested']['key']])) {
-                        $nested[$aCriteria['nested']['key']] = $toBeAppended;
-                    } else {
-                        $nested[$aCriteria['nested']['key']] .= $toBeAppended;
-                    }
-                }
-
-                $counter++;
-            }
-
-            if (!empty($nested)) {
-                foreach ($nested as $aNestedKey => $aNestedValue) {
-                    // find and replace $aNestedKey placeholder in where clause with the nested query
-                    $where = str_replace('{'.$aNestedKey.'}', rtrim($aNestedValue), $where);
-                }
-            }
-
-            return rtrim($where);
+        if (empty($criteria)) {
+            return '';
         }
 
-        return '';
+        $where = ' WHERE ';
+
+        $counter = 1;
+        $nested = [];
+        foreach ($criteria as $aCriteria) {
+            if (!empty($aCriteria['nested'])) {
+                // check placeholder is not already added
+                $before = isset($aCriteria['nested']['before']) && $counter != 1 ? "{$aCriteria['nested']['before']} " : '';
+                $after = isset($aCriteria['nested']['after']) ? " {$aCriteria['nested']['after']}" : '';
+
+                $placeholder = $before.'({'.$aCriteria['nested']['key'].'})'.$after.' ';
+                $placeholderExists = strpos($where, $placeholder);
+
+                // if placeholder does not exist append it to where clause
+                if ($placeholderExists === false) {
+                    // add placeholder
+                    $where .= $placeholder;
+                }
+            }
+
+            if (empty($aCriteria['column'])) {
+                throw new \Exception('Column name cannot be empty');
+            }
+
+            if (empty($aCriteria['operator'])) {
+                // If operator is not specified, consider '=' as the operator
+                $aCriteria['operator'] = '=';
+            }
+
+            if (!in_array($aCriteria['operator'], $this->validComparisonOperators)) {
+                throw new \Exception("'{$aCriteria['operator']}' is not a valid comparison operator");
+            }
+
+            if ($counter === 1 || !empty($before) || !empty($after)) {
+                $logicalOperator = '';
+            } elseif (empty($aCriteria['logicalOperator'])) {
+                // counter is greater than 1 and $aCriteria['logicalOperator'] is empty, consider 'AND' as default
+                $logicalOperator = 'AND ';
+            } else {
+                // counter is greater than 1 and $aCriteria['logicalOperator'] is NOT empty, validate it first
+                if (!in_array($aCriteria['logicalOperator'], $this->validLogicalOperators)) {
+                    throw new \Exception("'{$aCriteria['logicalOperator']}' is not a valid logical operator");
+                }
+
+                $logicalOperator = "{$aCriteria['logicalOperator']} ";
+            }
+
+            $toBeAppended = "{$logicalOperator}{$aCriteria['column']} {$aCriteria['operator']} ";
+
+            // Form the query for IN or NOT IN
+            if ($aCriteria['operator'] === 'IN' || $aCriteria['operator'] === 'NOT IN') {
+                if (is_array($aCriteria['value'])) {
+                    // value is array
+                    $newParameters = [];
+
+                    $aCriteriaKeys = array_keys($aCriteria['value']);
+                    foreach ($aCriteriaKeys as $key) {
+                        $placeholder = $this->preparePlaceholder($aCriteria['column']);
+                        $newParameters[] = ":{$placeholder}{$counter}{$key}";
+                    }
+
+                    $toBeAppended .= '('.implode(',', $newParameters).') ';
+                } else {
+                    // value is not array
+                    $placeholder = $this->preparePlaceholder($aCriteria['column']);
+                    $toBeAppended .= "(:{$placeholder}{$counter}) ";
+                }
+            } else {
+                // IS NULL and IS NOT NULL do NOT need a parameter
+                if ($aCriteria['operator'] !== 'IS NULL' && $aCriteria['operator'] !== 'IS NOT NULL') {
+                    $placeholder = $this->preparePlaceholder($aCriteria['column']);
+                    $toBeAppended .= ":{$placeholder}{$counter} ";
+                }
+            }
+
+            if (empty($aCriteria['nested'])) {
+                $where .= $toBeAppended;
+            } else {
+                // append it to the key in $nested
+                if (!isset($nested[$aCriteria['nested']['key']])) {
+                    $nested[$aCriteria['nested']['key']] = $toBeAppended;
+                } else {
+                    $nested[$aCriteria['nested']['key']] .= $toBeAppended;
+                }
+            }
+
+            $counter++;
+        }
+
+        if (!empty($nested)) {
+            foreach ($nested as $aNestedKey => $aNestedValue) {
+                // find and replace $aNestedKey placeholder in where clause with the nested query
+                $where = str_replace('{'.$aNestedKey.'}', rtrim($aNestedValue), $where);
+            }
+        }
+
+        return rtrim($where);
     }
 
     /**
@@ -567,7 +569,7 @@ class QueryMaker
     public function getSelectFromTables($fromColumns = null)
     {
         $joinedSelect = [];
-        $counter = 1;
+        $counter = 0;
         $from = '';
 
         if (empty($this->getTables())) {
@@ -575,19 +577,20 @@ class QueryMaker
         }
 
         foreach ($this->getTables() as $tableAlias => $table) {
+            $counter++;
+
             if ($counter === 1) {
                 $from .= "`{$table['name']}` AS `{$tableAlias}`";
-            } else {
-                $from .= " JOIN `{$table['name']}` AS `{$tableAlias}`";
-
-                if (empty($table['on']) || !is_array($table['on'])) {
-                    throw new \Exception("join array must have 'on'");
-                }
-
-                $from .= ' ON '.implode(' = ', $table['on']);
+                continue;
             }
 
-            $counter++;
+            $from .= " JOIN `{$table['name']}` AS `{$tableAlias}`";
+
+            if (empty($table['on']) || !is_array($table['on'])) {
+                throw new \Exception("join array must have 'on'");
+            }
+
+            $from .= ' ON '.implode(' = ', $table['on']);
         }
 
         if ($fromColumns === null) {
